@@ -2303,7 +2303,21 @@ int platform_set_ecomode_for_radio(const int wl_idx, const bool eco_pwr_down)
 
 int platform_set_txpower(void* priv, uint txpower)
 {
-    return 0;
+    wifi_interface_info_t *interface = (wifi_interface_info_t *)priv;
+    INT radioIndex = (INT)interface->rdk_radio_index; 
+    int ret = wifi_setRadioTransmitPower(radioIndex, txpower);
+    if (ret != RETURN_OK) {
+        wifi_hal_stats_dbg_print("%s:%d [Sneha] Failed: wifi_setRadioTransmitPower(index=%d, txPower=%u%%)\n", __func__, __LINE__, radioIndex, txpower);
+        return RETURN_ERR;
+    }
+    ret = wifi_applyRadioSettings(radioIndex);
+    if (ret != RETURN_OK) {
+        wifi_hal_stats_dbg_print("%s:%d [Sneha] Failed: wifi_applyRadioSettings(index=%d)\n",__func__, __LINE__, radioIndex);
+        return RETURN_ERR;
+    }
+    wifi_hal_stats_dbg_print("%s:%d Setting tx power to %u%% for radio %d\n\n",__func__, txpower, radioIndex);
+ 
+     return RETURN_OK;
 }
 
 int platform_set_offload_mode(void* priv, uint offload_mode)
