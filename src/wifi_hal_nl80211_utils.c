@@ -3994,46 +3994,45 @@ int wifi_ieee80211Variant_to_str(char *dest, size_t dest_size, wifi_ieee80211Var
     const char *str)
 {
     const char *mode;
-
     if (*str != '\0') {
-        return wifi_enum_bitmap_to_str(dest, dest_size, wifi_variant_Map,
-            ARRAY_SIZE(wifi_variant_Map), str, (int)variant);
+        return wifi_enum_bitmap_to_str(dest, dest_size, wifi_variant_Map, ARRAY_SIZE(wifi_variant_Map), str, (int)variant);
     } else {
         if ((dest != NULL) && (dest_size != 0)) {
             *dest = '\0';
-
-            if (variant & WIFI_80211_VARIANT_A) {
-                mode = "a";
-                str_list_append(dest, dest_size, mode);
-            }
-            if (variant & WIFI_80211_VARIANT_B) {
-                mode = "b";
-                str_list_append(dest, dest_size, mode);
-            }
-            if (variant & WIFI_80211_VARIANT_G) {
-                mode = "g";
-                str_list_append(dest, dest_size, mode);
-            }
-            if (variant &
-                (WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC | WIFI_80211_VARIANT_AX |
-                    WIFI_80211_VARIANT_BE)) {
-                if (variant & WIFI_80211_VARIANT_BE) {
-                    mode = "be";
-                } else if (variant & WIFI_80211_VARIANT_AX) {
-                    mode = "ax";
-                } else if (variant & WIFI_80211_VARIANT_AC) {
-                    mode = "ac";
-                } else {
-                    mode = "n";
+            static const struct {
+                uint32_t bit;
+                const char *name;
+            } variant_order[] = {
+                { WIFI_80211_VARIANT_B,  "b"  },
+                { WIFI_80211_VARIANT_A,  "a"  },
+                { WIFI_80211_VARIANT_G,  "g"  },
+                { WIFI_80211_VARIANT_N,  "n"  },
+                { WIFI_80211_VARIANT_AC, "ac" },
+                { WIFI_80211_VARIANT_AX, "ax" },
+                { WIFI_80211_VARIANT_BE, "be" }
+            };
+            const char *lowest = NULL, *highest = NULL;
+            for (int i = 0; i < ARRAY_SIZE(variant_order); i++) {
+                if (variant & variant_order[i].bit) {
+                    if (!lowest){
+                        lowest = variant_order[i].name; // first match
+                    highest = variant_order[i].name;   // last match
+                    }
                 }
-                str_list_append(dest, dest_size, mode);
             }
+            // --- FIXED: only lowest + highest using str_list_append() ---
+            if (lowest) {
+                str_list_append(dest, dest_size, lowest);
+            }
+            if (highest && highest != lowest) {
+                str_list_append(dest, dest_size, highest);
+            }
+            wifi_hal_stats_dbg_print("%s:%d: lowest:%s highest:%s\n", __func__, __LINE__, lowest ? lowest : "none", highest ? highest : "none");
         } else {
             wifi_hal_error_print("%s:%d: NULL or zero-size buffer\n", __func__, __LINE__);
             return RETURN_ERR;
         }
     }
-
     return RETURN_OK;
 }
 
