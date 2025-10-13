@@ -1960,10 +1960,6 @@ INT wifi_hal_addApAclDevice(INT apIndex, mac_address_t DeviceMacAddress)
         return RETURN_ERR;
     }
     vap = &interface->vap_info;
-    if (!vap->u.bss_info.enabled) {
-        wifi_hal_info_print("%s:%d Skipping addition of MAC Entry to ACL since %s is not enabled\n",__func__,__LINE__,interface->name);
-        return RETURN_OK;
-    }
 
     key = to_mac_str(DeviceMacAddress, sta_mac_str);
     
@@ -1975,21 +1971,19 @@ INT wifi_hal_addApAclDevice(INT apIndex, mac_address_t DeviceMacAddress)
     }
 
     if (interface->acl_map == NULL) {
-        wifi_hal_info_print("%s:%d: ACL map is NULL for ap index %d\n", __func__, __LINE__, apIndex);
-#ifdef CMXB7_PORT
+        wifi_hal_error_print("%s:%d: ACL map is NULL for ap index %d\n", __func__, __LINE__, apIndex);
         interface->acl_map = hash_map_create();
         if (interface->acl_map == NULL) {
             wifi_hal_error_print("%s:%d: ACL map create failure for ap index %d\n", __func__, __LINE__, apIndex);
             return RETURN_ERR;
         }
-#endif
     }
 
     acl_map = hash_map_get(interface->acl_map, key);
 
     if (acl_map != NULL) {
         wifi_hal_error_print("%s:%d: MAC %s already present in acl list\n", __func__, __LINE__, key);
-        return RETURN_ERR;
+        return RETURN_OK;
     }
 
     acl_map = (acl_map_t *)malloc(sizeof(acl_map_t));
@@ -2027,11 +2021,7 @@ INT wifi_hal_addApAclDevice(INT apIndex, CHAR *DeviceMacAddress)
         return RETURN_ERR;
     }
     vap = &interface->vap_info;
-    if (!vap->u.bss_info.enabled) {
-        wifi_hal_info_print("%s:%d Skipping addition of MAC Entry to ACL since %s is not enabled\n",__func__,__LINE__,interface->name);
-        return RETURN_OK;
-    }
-    
+
     wifi_hal_info_print("%s:%d: Interface: %s MAC: %s\n",  __func__, __LINE__, interface->name, DeviceMacAddress);
 
     if (vap->vap_mode != wifi_vap_mode_ap) {
@@ -2040,21 +2030,19 @@ INT wifi_hal_addApAclDevice(INT apIndex, CHAR *DeviceMacAddress)
     }
 
     if (interface->acl_map == NULL) {
-        wifi_hal_info_print("%s:%d: ACL map is NULL for ap index %d\n", __func__, __LINE__, apIndex);
-#ifdef CMXB7_PORT
+        wifi_hal_error_print("%s:%d: ACL map is NULL for ap index %d\n", __func__, __LINE__, apIndex);
         interface->acl_map = hash_map_create();
         if (interface->acl_map == NULL) {
             wifi_hal_info_print("%s:%d: ACL map create failure for ap index %d\n", __func__, __LINE__, apIndex);
             return RETURN_ERR;
         }
-#endif
     }
 
     acl_map = hash_map_get(interface->acl_map, DeviceMacAddress);
 
     if (acl_map != NULL) {
         wifi_hal_error_print("%s:%d: MAC %s already present in acl list\n", __func__, __LINE__, DeviceMacAddress);
-        return RETURN_ERR;
+        return RETURN_OK;
     }
 
     acl_map = (acl_map_t *)malloc(sizeof(acl_map_t));
@@ -2108,14 +2096,14 @@ INT wifi_hal_delApAclDevice(INT apIndex, mac_address_t DeviceMacAddress)
 
     if (interface->acl_map == NULL) {
         wifi_hal_error_print("%s:%d: ACL map is NULL for ap index %d\n", __func__, __LINE__, apIndex);
-        return RETURN_ERR;
+        return RETURN_OK;
     }
 
     acl_map = hash_map_get(interface->acl_map, key);
 
     if (acl_map == NULL) {
         wifi_hal_error_print("%s:%d: MAC %s is not present in acl list\n", __func__, __LINE__, key);
-        return RETURN_ERR;
+        return RETURN_OK;
     }
 
     hash_map_remove(interface->acl_map, key);
@@ -2159,14 +2147,14 @@ INT wifi_hal_delApAclDevice(INT apIndex, CHAR *DeviceMacAddress)
 
     if (interface->acl_map == NULL) {
         wifi_hal_error_print("%s:%d: ACL map is NULL for ap index %d\n", __func__, __LINE__, apIndex);
-        return RETURN_ERR;
+        return RETURN_OK;
     }
 
     acl_map = hash_map_get(interface->acl_map, DeviceMacAddress);
 
     if (acl_map == NULL) {
         wifi_hal_error_print("%s:%d: MAC %s is not present in acl list\n", __func__, __LINE__, DeviceMacAddress);
-        return RETURN_ERR;
+        return RETURN_OK;
     }
 
     hash_map_remove(interface->acl_map, DeviceMacAddress);
@@ -2759,7 +2747,11 @@ static int decode_bss_info_to_neighbor_ap_info(wifi_neighbor_ap2_t *ap, const wi
             str = "WPA3-Personal";
             break;
         case wifi_security_mode_wpa3_transition:
-            str = "WPA3-Transition";
+            if (bss->oper_freq_band == WIFI_FREQUENCY_6_BAND || bss->oper_freq_band == WIFI_FREQUENCY_60_BAND) {
+                str = "WPA3-Personal";
+            } else {
+                str = "WPA3-Personal-Transition";
+            }
             break;
         case wifi_security_mode_wpa3_enterprise:
             str = "WPA3-Enterprise";
