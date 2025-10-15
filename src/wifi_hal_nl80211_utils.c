@@ -3991,7 +3991,6 @@ fail:
 int wifi_ieee80211Variant_to_str(char *dest, size_t dest_size, wifi_ieee80211Variant_t variant,
     const char *str)
 {
-    const char *mode;
     if (*str != '\0') {
         return wifi_enum_bitmap_to_str(dest, dest_size, wifi_variant_Map, ARRAY_SIZE(wifi_variant_Map), str, (int)variant);
     } else {
