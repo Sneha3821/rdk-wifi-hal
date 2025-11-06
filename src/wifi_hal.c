@@ -755,7 +755,7 @@ INT wifi_hal_setRadioOperatingParameters(wifi_radio_index_t index, wifi_radio_op
 
     if ((op_class = get_op_class_from_radio_params(operationParam)) == -1) {
         wifi_hal_error_print("%s:%d:Could not find country code for radio index:%d\n", __func__, __LINE__, index);
-        return WIFI_HAL_INVALID_ARGUMENTS; // RDKB-47696: Passing invalid channel should return WIFI_HAL_INVALID_ARGUMENTS(-4)
+        return WIFI_HAL_INVALID_ARGUMENTS;
     }
 
     if (validate_radio_operation_param(operationParam) != RETURN_OK) {
@@ -804,21 +804,31 @@ INT wifi_hal_setRadioOperatingParameters(wifi_radio_index_t index, wifi_radio_op
         wifi_hal_error_print(
             "%s:%d:Failed to update AMSDU TID params ! AMSDU possibly out of sync \n",
             __func__, __LINE__);
-        // fall-through, don't return error
     }
 #endif
 
     if (radio->configured && radio->oper_param.enable != operationParam->enable) {
+
+        bool is_variant_changed = (radio->oper_param.variant != operationParam->variant);
+
         memcpy((unsigned char *)&radio->oper_param, (unsigned char *)operationParam, sizeof(wifi_radio_operationParam_t));
 
         if (update_hostap_config_params(radio) != RETURN_OK ) {
-            wifi_hal_error_print("%s:%d:Failed to update hostap config params\n", __func__, __LINE__);
+            wifi_hal_error_print("%s:%d:Sneha Failed to update hostap config params\n", __func__, __LINE__);
             return RETURN_ERR;
+        }
+        if (is_variant_changed) {
+            wifi_hal_info_print("%s:%d:Sneha OperatingStandard changed → calling nl80211_update_wiphy()\n",
+                __func__, __LINE__);
+            if (nl80211_update_wiphy(radio) != 0) {
+                wifi_hal_error_print("%s:%d:Sneha Failed to update radio\n", __func__, __LINE__);
+                return RETURN_ERR;
+            }
         }
 
         interface = hash_map_get_first(radio->interface_map);
         if (interface == NULL ) {
-            wifi_hal_error_print("%s:%d: Interface map is empty for radio\n", __func__, __LINE__);
+            wifi_hal_error_print("%s:%d:Sneha Interface map is empty for radio\n", __func__, __LINE__);
             goto Exit;
         }
 
@@ -827,7 +837,7 @@ INT wifi_hal_setRadioOperatingParameters(wifi_radio_index_t index, wifi_radio_op
 
             if (interface->vap_info.vap_mode == wifi_vap_mode_ap) {
                 wifi_hal_info_print(
-                    "%s:%d: vap_index: %d interface name: %s vap_initialized: %d "
+                    "%s:%d:Sneha vap_index: %d interface name: %s vap_initialized: %d "
                     "bss started: %d vap enabled: %d radio configured: %d radio enabled: %d\n",
                     __func__, __LINE__, interface->vap_info.vap_index, interface_name,
                     interface->vap_initialized, interface->bss_started,
@@ -850,7 +860,6 @@ INT wifi_hal_setRadioOperatingParameters(wifi_radio_index_t index, wifi_radio_op
                 }
 
                 if (radio->oper_param.enable == false && interface->bss_started) {
-                    /* Clear beacon interval in wdev by stoping AP */
                     nl80211_interface_enable(interface_name, false);
                     nl80211_interface_enable(interface_name, true);
                     interface->beacon_set = 0;
