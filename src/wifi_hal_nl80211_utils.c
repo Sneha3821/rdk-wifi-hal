@@ -358,33 +358,33 @@ static const wifi_interface_name_idex_map_t static_interface_index_map[] = {
 #endif /* RDKB_ONE_WIFI_PROD */
   
 #ifdef SCXF10_PORT
-    {1, 0,  "wl0.1",   "brlan0",   100,   0,      "private_ssid_2g"},
-    {2, 1,  "wl1.1",   "brlan0",   100,   1,      "private_ssid_5g"},
-    {1, 0,  "wl0.2",   "brlan1",   101,   2,      "iot_ssid_2g"},
-    {2, 1,  "wl1.2",   "brlan1",   101,   3,      "iot_ssid_5g"},
-    {1, 0,  "wl0.3",   "brlan2",   102,   4,      "hotspot_open_2g"},
-    {2, 1,  "wl1.3",   "brlan3",   103,   5,      "hotspot_open_5g"},
-    {1, 0,  "wl0.4",   "br106",    106,   6,      "lnf_psk_2g"},
-    {2, 1,  "wl1.4",   "br106",    106,   7,      "lnf_psk_5g"},
-    {1, 0,  "wl0.5",   "brlan4",   104,   8,      "hotspot_secure_2g"},
-    {2, 1,  "wl1.5",   "brlan5",   105,   9,      "hotspot_secure_5g"},
-    {1, 0,  "wl0.6",   "br106",    106,   10,     "lnf_radius_2g"},
-    {2, 1,  "wl1.6",   "br106",    106,   11,     "lnf_radius_5g"},
-    {1, 0,  "wl0.7",   "brlan112", 112,   12,     "mesh_backhaul_2g"},
-    {2, 1,  "wl1.7",   "brlan113", 113,   13,     "mesh_backhaul_5g"},
-    {1, 0,  "wl0",     "",         0,     14,     "mesh_sta_2g"},
-    {2, 1,  "wl1",     "",         0,     15,     "mesh_sta_5g"},
-    {0, 2,  "wl2.1",   "brlan0",   100,   16,     "private_ssid_6g"},
-    {0, 2,  "wl2.2",   "brlan1",   101,   17,     "iot_ssid_6g"},
-    {0, 2,  "wl2.3",   "bropen6g", 2253,  18,     "hotspot_open_6g"},
-    {0, 2,  "wl2.4",   "br106",    106,   19,     "lnf_psk_6g"},
-    {0, 2,  "wl2.5",   "brsecure6g",2256, 20,     "hotspot_secure_6g"},
+    {2, 0,  "wl0.1",  "", "brlan0",   100,   0,      "private_ssid_2g"},
+    {1, 1,  "wl1.1",  "", "brlan0",   100,   1,      "private_ssid_5g"},
+    {2, 0,  "wl0.2",  "", "brlan1",   101,   2,      "iot_ssid_2g"},
+    {1, 1,  "wl1.2",  "", "brlan1",   101,   3,      "iot_ssid_5g"},
+    {2, 0,  "wl0.3",  "", "brlan2",   102,   4,      "hotspot_open_2g"},
+    {1, 1,  "wl1.3",  "", "brlan3",   103,   5,      "hotspot_open_5g"},
+    {2, 0,  "wl0.4",  "", "br106",    106,   6,      "lnf_psk_2g"},
+    {1, 1,  "wl1.4",  "", "br106",    106,   7,      "lnf_psk_5g"},
+    {2, 0,  "wl0.5",  "", "brlan4",   104,   8,      "hotspot_secure_2g"},
+    {1, 1,  "wl1.5",  "", "brlan5",   105,   9,      "hotspot_secure_5g"},
+    {2, 0,  "wl0.6",  "", "br106",    106,   10,     "lnf_radius_2g"},
+    {1, 1,  "wl1.6",  "", "br106",    106,   11,     "lnf_radius_5g"},
+    {2, 0,  "wl0.7",  "", "brlan112", 112,   12,     "mesh_backhaul_2g"},
+    {1, 1,  "wl1.7",  "", "brlan113", 113,   13,     "mesh_backhaul_5g"},
+    {2, 0,  "wl0",    "", "",         0,     14,     "mesh_sta_2g"},
+    {1, 1,  "wl1",    "", "",         0,     15,     "mesh_sta_5g"},
+    {0, 2,  "wl2.1",  "", "brlan0",   100,   16,     "private_ssid_6g"},
+    {0, 2,  "wl2.2",  "", "brlan1",   101,   17,     "iot_ssid_6g"},
+    {0, 2,  "wl2.3",  "", "bropen6g", 2253,  18,     "hotspot_open_6g"},
+    {0, 2,  "wl2.4",  "", "br106",    106,   19,     "lnf_psk_6g"},
+    {0, 2,  "wl2.5",  "", "brsecure6g",2256, 20,     "hotspot_secure_6g"},
 #if 0
-    {0, 2,  "wl2.6",   "br106",    106,   21,     "lnf_radius_6g"},
+    {0, 2,  "wl2.6",  "", "br106",    106,   21,     "lnf_radius_6g"},
 #endif
-    {0, 2,  "wl2.7",   "brlan114", 114,   22,     "mesh_backhaul_6g"},
-    {0, 2,  "wl2",     "",         0,     23,     "mesh_sta_6g"},
-#endif
+    {0, 2,  "wl2.7",  "", "brlan114", 114,   22,     "mesh_backhaul_6g"},
+    {0, 2,  "wl2",    "", "",         0,     23,     "mesh_sta_6g"},
+#endif /* SCXF10_PORT */
     // for Intel based platforms
 };
 #endif
@@ -429,11 +429,9 @@ static const radio_interface_mapping_t static_radio_interface_map[] = {
     { 0, 2, "radio3", "wl2"},
 #endif
 
-/* PHY radio mapping needs to be verified against the hardware */
-/* TBD */
 #if defined(SCXF10_PORT) 
-    { 1, 0, "radio1", "wl0"},
-    { 2, 1, "radio2", "wl1"},
+    { 2, 0, "radio1", "wl0"},
+    { 1, 1, "radio2", "wl1"},
     { 0, 2, "radio3", "wl2"},
 #endif
  
@@ -1660,6 +1658,40 @@ int is_backhaul_interface(wifi_interface_info_t *interface)
 
     vap = &interface->vap_info;
     return (strncmp(vap->vap_name, "mesh_backhaul", strlen("mesh_backhaul")) == 0) ? true : false;
+}
+
+unsigned int get_band_info_from_rdk_radio_index(unsigned int rdk_radio_index)
+{
+    unsigned int i;
+    const char *vap_name = NULL;
+
+    for (i = 0; i < get_sizeof_interfaces_index_map(); i++) {
+        if (interface_index_map[i].rdk_radio_index == rdk_radio_index) {
+            vap_name = interface_index_map[i].vap_name;
+            if (!vap_name) {
+                break;
+            }
+            if (strstr(vap_name, "2g") != NULL) {
+                return WIFI_FREQUENCY_2_4_BAND;
+            } else if (strstr(vap_name, "5gl") != NULL) {
+                return  WIFI_FREQUENCY_5L_BAND;
+            } else if (strstr(vap_name, "5gh") != NULL) {
+                return  WIFI_FREQUENCY_5H_BAND;
+            } else if (strstr(vap_name, "5g") != NULL) {
+                return WIFI_FREQUENCY_5_BAND;
+            } else if (strstr(vap_name, "6g") != NULL) {
+                return WIFI_FREQUENCY_6_BAND;
+            }
+
+            wifi_hal_error_print("%s:%d: Unable to parse band from vap_name: %s\n",
+                                 __func__, __LINE__, vap_name);
+            break;
+        }
+    }
+
+    wifi_hal_error_print("%s:%d: Failed to resolve band for rdk_radio_index: %u\n",
+                         __func__, __LINE__, rdk_radio_index);
+    return 0;
 }
 
 void update_vap_mode(wifi_interface_info_t *interface)
@@ -4017,16 +4049,22 @@ int wifi_ieee80211Variant_to_str(char *dest, size_t dest_size, wifi_ieee80211Var
             if (variant &
                 (WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC | WIFI_80211_VARIANT_AX |
                     WIFI_80211_VARIANT_BE)) {
-                if (variant & WIFI_80211_VARIANT_BE) {
-                    mode = "be";
-                } else if (variant & WIFI_80211_VARIANT_AX) {
-                    mode = "ax";
-                } else if (variant & WIFI_80211_VARIANT_AC) {
-                    mode = "ac";
+                if ((variant & WIFI_80211_VARIANT_BE) && (variant & WIFI_80211_VARIANT_AX)) {
+                    // Wi-Fi 7 supports both AX (6E base) and BE (Wi-Fi 7)
+                    str_list_append(dest, dest_size, "ax");
+                    str_list_append(dest, dest_size, "be");
                 } else {
-                    mode = "n";
+                    if (variant & WIFI_80211_VARIANT_BE) {
+                        mode = "be";
+                    } else if (variant & WIFI_80211_VARIANT_AX) {
+                        mode = "ax";
+                    } else if (variant & WIFI_80211_VARIANT_AC) {
+                        mode = "ac";
+                    } else {
+                        mode = "n";
+                    }
+                    str_list_append(dest, dest_size, mode);
                 }
-                str_list_append(dest, dest_size, mode);
             }
         } else {
             wifi_hal_error_print("%s:%d: NULL or zero-size buffer\n", __func__, __LINE__);
