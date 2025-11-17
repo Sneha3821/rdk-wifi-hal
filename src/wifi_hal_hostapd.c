@@ -1473,7 +1473,8 @@ int update_hostap_iface(wifi_interface_info_t *interface)
     iface = &interface->u.ap.iface;
     iface->interfaces = &radio->interfaces;
     iface->conf = &radio->iconf;
-    strcpy(iface->phy, radio->name);
+    strncpy(iface->phy, radio->name, sizeof(iface->phy) - 1);
+    iface->phy[sizeof(iface->phy) - 1] = '\0';
     iface->state = HAPD_IFACE_ENABLED;
 
     iface->num_bss = 1;
@@ -1532,6 +1533,14 @@ int update_hostap_iface(wifi_interface_info_t *interface)
     if (iface->current_mode == NULL) {
         wifi_hal_error_print("%s:%d failed to get mode, interface: %s hw mode: %d, freq: %d\n",
             __func__, __LINE__, interface->name, iface->conf->hw_mode, iface->freq);
+        if (preassoc_supp_rates) {
+           os_free(preassoc_supp_rates);
+           preassoc_supp_rates = NULL;
+        }
+        if (preassoc_basic_rates) {
+           os_free(preassoc_basic_rates);
+           preassoc_basic_rates = NULL;
+        }
         return RETURN_ERR;
     }
 #else
@@ -1922,6 +1931,7 @@ int update_hostap_config_params(wifi_radio_info_t *radio)
     const struct hostapd_tx_queue_params txq_be = { 3, ecw2cw(aCWmin), 4 * (ecw2cw(aCWmin) + 1) - 1, 0};
     const struct hostapd_tx_queue_params txq_vi = { 1, (ecw2cw(aCWmin) + 1) / 2 - 1, ecw2cw(aCWmin), 30};
     const struct hostapd_tx_queue_params txq_vo = { 1, (ecw2cw(aCWmin) + 1) / 4 - 1, (ecw2cw(aCWmin) + 1) / 2 - 1, 15};
+    char country_code[4] = { 0 };
 
     struct hostapd_config   *iconf;
     wifi_radio_operationParam_t *param;
@@ -2059,7 +2069,8 @@ int update_hostap_config_params(wifi_radio_info_t *radio)
     iconf->op_class = param->operatingClass;
 #endif
 
-    get_coutry_str_from_oper_params(param, iconf->country);
+    get_coutry_str_from_oper_params(param, country_code);
+    memcpy(iconf->country, country_code, sizeof(iconf->country));
     // use global operating class in country info
     iconf->country[2] = 0x04;
 
@@ -2754,7 +2765,7 @@ void update_wpa_sm_params(wifi_interface_info_t *interface)
                 } else if (sec->mode == wifi_security_mode_wpa3_enterprise) {
                     sel = (WPA_KEY_MGMT_IEEE8021X_SHA256 | wpa_key_mgmt_11w) & data.key_mgmt;
                 } else if (sec->mode == wifi_security_mode_wpa3_compatibility) {
-#if HOSTAPD_VERSION >= 211 //2.11
+#if !defined(BANANA_PI_PORT) && (HOSTAPD_VERSION >= 211)
                     wpa_sm_set_param(sm, WPA_PARAM_RSN_OVERRIDE_SUPPORT, true);
 #ifdef CONFIG_IEEE80211BE
                     if (wpa_sm_get_rsn_override(sm) == RSN_OVERRIDE_RSNE_OVERRIDE_2) {
@@ -2763,7 +2774,7 @@ void update_wpa_sm_params(wifi_interface_info_t *interface)
                         sel = (wpa_key_mgmt_11w | WPA_KEY_MGMT_SAE_EXT_KEY) & data.key_mgmt;
                     } else
 #endif //CONFIG_IEEE80211BE
-#endif //2.11
+#endif //!BANANA_PI_PORT && HOSTAPD_VERSION >= 211
                     {
                         sel = (wpa_key_mgmt_11w | WPA_KEY_MGMT_SAE) & data.key_mgmt;
                     }
@@ -2776,7 +2787,9 @@ void update_wpa_sm_params(wifi_interface_info_t *interface)
 #endif
             {
                 sel = (WPA_KEY_MGMT_SAE | WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_PSK |
-                    WPA_KEY_MGMT_PSK_SHA256 | wpa_key_mgmt_11w) & data.key_mgmt;
+                          WPA_KEY_MGMT_IEEE8021X_SHA256 | WPA_KEY_MGMT_PSK_SHA256 |
+                          wpa_key_mgmt_11w) &
+                    data.key_mgmt;
             }
 
             key_mgmt = pick_akm_suite(sel); 
@@ -2832,6 +2845,15 @@ void update_wpa_sm_params(wifi_interface_info_t *interface)
             wpa_sm_set_param(sm, WPA_PARAM_KEY_MGMT, key_mgmt);
         }
     }
+
+#ifdef CONFIG_IEEE80211W
+    // Force MFP for WPA3 modes
+    if (sec->mode == wifi_security_mode_wpa3_personal ||
+        sec->mode == wifi_security_mode_wpa3_enterprise ||
+        sec->mode == wifi_security_mode_wpa3_transition) {
+        wpa_sm_set_param(sm, WPA_PARAM_MFP, MGMT_FRAME_PROTECTION_REQUIRED);
+    }
+#endif
 
     if (get_ie_by_eid(WLAN_EID_RSN, assoc_req, interface->u.sta.assoc_req_len, &ie, &ie_len)
                 == true) {

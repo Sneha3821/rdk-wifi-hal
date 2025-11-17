@@ -684,6 +684,7 @@ typedef int    (* platform_set_neighbor_report_t)(uint apIndex, uint add, mac_ad
 typedef int    (* platform_get_radio_phytemperature_t)(wifi_radio_index_t index, wifi_radioTemperature_t *radioPhyTemperature);
 typedef int    (* platform_set_dfs_t)(wifi_radio_index_t index, wifi_radio_operationParam_t *operationParam);
 typedef int    (* platform_get_radio_caps_t)(wifi_radio_index_t index);
+typedef int    (* platform_get_RegDomain_t)(wifi_radio_index_t index, uint *reg_domain);
 
 int wifi_hal_parse_rrm_beacon_rep(wifi_interface_info_t *interface, char *buff,
         size_t len, struct rrm_measurement_beacon_report *meas_rep);
@@ -771,6 +772,7 @@ typedef struct {
     platform_get_radio_phytemperature_t platform_get_radio_phytemperature_fn;
     platform_set_dfs_t                platform_set_dfs_fn;
     platform_get_radio_caps_t         platform_get_radio_caps_fn;
+    platform_get_RegDomain_t platform_get_RegDomain_fn;
 } wifi_driver_info_t;
 
 typedef enum bm_sta_rssi_type {
@@ -1042,6 +1044,15 @@ int wifi_hal_purgeScanResult(unsigned int vap_index, unsigned char *sta_mac);
 void get_wifi_interface_info_map(wifi_interface_name_idex_map_t *interface_map);
 void get_radio_interface_info_map(radio_interface_mapping_t *radio_interface_map);
 unsigned int get_sizeof_interfaces_index_map(void);
+u32 get_wpa_version(wifi_security_modes_t mode);
+bool is_wpa3_192bit_mode(const struct wpa_auth_config *wpa_conf);
+void get_cipher_suites(wifi_security_modes_t mode, wifi_encryption_method_t encr,
+    const struct wpa_auth_config *wpa_conf, u32 *pairwise, u32 *group);
+enum nl80211_mfp get_mfp_mode(wifi_security_modes_t mode, int configured_mfp);
+u32 get_akm_suite(int wpa_key_mgmt, wifi_security_modes_t mode);
+enum nl80211_auth_type get_auth_type(wifi_security_modes_t mode, u32 akm_suite);
+int configure_nl80211_security(struct nl_msg *msg, const wifi_vap_security_t *security,
+    const struct wpa_auth_config *wpa_conf);
 int validate_radio_operation_param(wifi_radio_operationParam_t *param);
 int validate_wifi_interface_vap_info_params(wifi_vap_info_t *vap_info, char *msg, int len);
 int is_backhaul_interface(wifi_interface_info_t *interface);
@@ -1241,6 +1252,7 @@ extern int platform_get_radio_info(void *priv, struct intel_vendor_radio_info *r
 extern int platform_get_sta_measurements(void *priv, const u8 *sta_addr, struct intel_vendor_sta_info *sta_info);
 #endif
 extern int platform_set_dfs(wifi_radio_index_t index, wifi_radio_operationParam_t *operationParam);
+extern int platform_get_reg_domain(wifi_radio_index_t radioIndex, UINT *reg_domain);
 
 #if defined(VNTXER5_PORT)
 INT platform_create_interface_attributes(struct nl_msg **msg_ptr, wifi_radio_info_t *radio,
@@ -1295,6 +1307,7 @@ platform_get_radio_phytemperature_t get_platform_get_radio_phytemperature_fn();
 platform_set_offload_mode_t         get_platform_set_offload_mode_fn();
 platform_set_dfs_t                  get_platform_dfs_set_fn();
 platform_get_radio_caps_t           get_platform_get_radio_caps_fn();
+platform_get_RegDomain_t get_platform_get_RegDomain_fn();
 
 INT wifi_hal_wps_event(wifi_wps_event_t data);
 INT wifi_hal_get_default_wps_pin(char *pin);

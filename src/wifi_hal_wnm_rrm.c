@@ -1049,7 +1049,7 @@ int wifi_rrm_send_beacon_resp(unsigned int ap_index, wifi_neighbor_ap2_t *bss,
     unsigned int num_ssid, unsigned int token, unsigned int num_report)
 {
     struct wpabuf *wpa_buf = NULL;
-    struct rrm_measurement_beacon_report rep;
+    struct rrm_measurement_beacon_report rep = { 0 };
     uint8_t idx = 0;
     size_t ssid_len = 0;
     unsigned int itr = 0;
@@ -1139,6 +1139,7 @@ int wifi_rrm_send_beacon_resp(unsigned int ap_index, wifi_neighbor_ap2_t *bss,
     backhaul = &interface->u.sta.backhaul;
     wifi_hal_send_mgmt_frame(ap_index, backhaul->bssid, wpabuf_head(report), wpabuf_len(report), 0, 0);
     os_free(wpa_buf);
+    wpabuf_free(report);
     return RETURN_OK;
 }
 
