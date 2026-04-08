@@ -630,6 +630,11 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
                 case wifi_security_mode_wpa_personal:
                 case wifi_security_mode_wpa2_personal:
                 case wifi_security_mode_wpa_wpa2_personal:
+wifi_hal_info_print("%s:%d:Sneha mode:%d mfp(input):%d ieee80211w(set):%d wpa_key_mgmt:%d\n", __func__, __LINE__,
+    sec->mode,
+    sec->mfp,
+    conf->ieee80211w,
+    conf->wpa_key_mgmt);
                     conf->wpa_key_mgmt |= WPA_KEY_MGMT_PSK_SHA256;
                     break;
                 case wifi_security_mode_wpa_enterprise:

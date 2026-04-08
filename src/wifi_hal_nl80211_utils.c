@@ -2692,6 +2692,13 @@ enum nl80211_mfp get_mfp_mode(wifi_security_modes_t mode, int configured_mfp)
     case wifi_security_mode_wpa3_compatibility:
     case wifi_security_mode_wpa2_enterprise:
     case wifi_security_mode_wpa2_personal:
+    if (configured_mfp == MGMT_FRAME_PROTECTION_OPTIONAL) {
+            return NL80211_MFP_OPTIONAL;
+            wifi_hal_error_print("%s:%d: Sneha Setting MFP as optional for WPA2 personal\n", __func__,
+            __LINE__);
+        } else if (configured_mfp == MGMT_FRAME_PROTECTION_REQUIRED) {
+            return NL80211_MFP_REQUIRED;
+        } //fallthrough
     case wifi_security_mode_wpa_wpa2_personal:
     case wifi_security_mode_wpa_wpa2_enterprise:
         if (configured_mfp == MGMT_FRAME_PROTECTION_OPTIONAL) {
