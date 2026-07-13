@@ -1363,6 +1363,17 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
     platform_set_beacon_prot_t set_vap_beacon_prot_fn;
     unsigned int i;
     char msg[2048];
+
+    wifi_hal_dbg_print("%s:%d: Sneha ENTER wifi_hal_createVAP - radio_index:%d num_vaps:%d\n",
+        __func__, __LINE__, index, map->num_vaps);
+    for (i = 0; i < map->num_vaps; i++) {
+        if (map->vap_array[i].vap_mode == wifi_vap_mode_ap) {
+            wifi_hal_dbg_print("%s:%d: Sneha createVAP vap[%d] - vap_index:%d ssid:%s security_mode:0x%x encr:%d mfp:%d\n",
+                __func__, __LINE__, i, map->vap_array[i].vap_index, map->vap_array[i].u.bss_info.ssid,
+                map->vap_array[i].u.bss_info.security.mode, map->vap_array[i].u.bss_info.security.encr,
+                map->vap_array[i].u.bss_info.security.mfp);
+        }
+    }
     int ret = RETURN_OK;
 #ifdef NL80211_ACL
     int set_acl = 0;
@@ -1548,6 +1559,8 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
 
             wifi_hal_info_print("%s:%d: interface:%s update hostapd params\n", __func__, __LINE__,
                 interface_name);
+            wifi_hal_dbg_print("%s:%d: Sneha createVAP calling update_hostap_interface_params - interface:%s vap_index:%d security_mode:0x%x\n",
+                __func__, __LINE__, interface_name, vap->vap_index, vap->u.bss_info.security.mode);
             if (update_hostap_interface_params(interface) != RETURN_OK) {
                 wifi_hal_error_print("%s:%d: interface:%s failed to update hostapd params\n",
                     __func__, __LINE__, interface_name);

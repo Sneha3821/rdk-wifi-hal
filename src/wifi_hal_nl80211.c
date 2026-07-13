@@ -17011,6 +17011,9 @@ static int nl80211_mbssid(struct nl_msg *msg, struct wpa_driver_ap_params *param
 
 int wifi_drv_set_ap(void *priv, struct wpa_driver_ap_params *params)
 {
+    wifi_hal_dbg_print("%s:%d: Sneha ENTER wifi_drv_set_ap - key_mgmt_suites:0x%x pairwise_ciphers:0x%x group_cipher:0x%x wpa_version:0x%x auth_algs:0x%x privacy:%d\n",
+        __func__, __LINE__, params->key_mgmt_suites, params->pairwise_ciphers, params->group_cipher,
+        params->wpa_version, params->auth_algs, params->privacy);
 #if defined(CONFIG_IEEE80211BE) && defined(CONFIG_MLO)
     struct nl_msg *msg_mlo;
 #endif /* CONFIG_IEEE80211BE */
@@ -17197,10 +17200,16 @@ int wifi_drv_set_ap(void *priv, struct wpa_driver_ap_params *params)
     if (params->key_mgmt_suites & WPA_KEY_MGMT_SAE)
         suites[num_suites++] = RSN_AUTH_KEY_MGMT_SAE;
 
+    wifi_hal_dbg_print("%s:%d: Sneha AKM suites to driver - num_suites:%d key_mgmt_suites:0x%x suites[0]:0x%x suites[1]:0x%x suites[2]:0x%x\n",
+        __func__, __LINE__, num_suites, params->key_mgmt_suites,
+        num_suites > 0 ? suites[0] : 0, num_suites > 1 ? suites[1] : 0, num_suites > 2 ? suites[2] : 0);
+
     if (num_suites) {
         if (nla_put(msg, NL80211_ATTR_AKM_SUITES, num_suites * sizeof(u32), suites) < 0) {
             wifi_hal_error_print("%s:%d: Failed to set AKM suites\n", __func__, __LINE__);
         }
+        wifi_hal_dbg_print("%s:%d: Sneha NL80211_ATTR_AKM_SUITES sent to driver successfully - num_suites:%d\n",
+            __func__, __LINE__, num_suites);
     }
 
     if (params->key_mgmt_suites & WPA_KEY_MGMT_IEEE8021X_NO_WPA &&
@@ -17228,6 +17237,8 @@ int wifi_drv_set_ap(void *priv, struct wpa_driver_ap_params *params)
 
     num_suites = wpa_cipher_to_cipher_suites(params->pairwise_ciphers,
                          suites, ARRAY_SIZE(suites));
+    wifi_hal_dbg_print("%s:%d: Sneha Pairwise cipher suites to driver - num_suites:%d pairwise_ciphers:0x%x suites[0]:0x%x\n",
+        __func__, __LINE__, num_suites, params->pairwise_ciphers, num_suites > 0 ? suites[0] : 0);
     if (num_suites) {
         if (nla_put(msg, NL80211_ATTR_CIPHER_SUITES_PAIRWISE, num_suites * sizeof(u32), suites) < 0) {
             wifi_hal_error_print("%s:%d: Failed to set pairwise cipher suites\n", __func__, __LINE__);

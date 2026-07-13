@@ -6341,6 +6341,10 @@ static int reload_mlo_vap_configuration(wifi_interface_info_t *interface)
 
 int reload_vap_configuration(wifi_interface_info_t *interface)
 {
+    wifi_hal_dbg_print("%s:%d: Sneha ENTER reload_vap_configuration - interface:%s vap_index:%d security_mode:0x%x encr:%d mfp:%d\n",
+        __func__, __LINE__, interface->name, interface->vap_info.vap_index,
+        interface->vap_info.u.bss_info.security.mode, interface->vap_info.u.bss_info.security.encr,
+        interface->vap_info.u.bss_info.security.mfp);
 #if defined(CONFIG_IEEE80211BE) && defined(CONFIG_GENERIC_MLO)
     if (wifi_hal_is_mld_enabled(interface)) {
         return reload_mlo_vap_configuration(interface);

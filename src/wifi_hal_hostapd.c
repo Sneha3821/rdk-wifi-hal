@@ -496,6 +496,9 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
     struct in6_addr ipaddrv6;
 #endif
 
+    wifi_hal_dbg_print("%s:%d: Sneha ENTER update_security_config - sec->mode:0x%x sec->encr:%d sec->mfp:%d interface:%s\n",
+        __func__, __LINE__, sec->mode, sec->encr, sec->mfp, conf->iface);
+
     conf->ieee802_1x = 0;
     conf->wpa_key_mgmt = 0;
 #if HOSTAPD_VERSION >= 210
@@ -515,15 +518,18 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
     switch (sec->mode) {
         case wifi_security_mode_none:
             conf->wpa_key_mgmt = WPA_KEY_MGMT_NONE;
+            wifi_hal_dbg_print("%s:%d: Sneha security_mode_none - wpa_key_mgmt:0x%x\n", __func__, __LINE__, conf->wpa_key_mgmt);
             break;
 
         case wifi_security_mode_enhanced_open:
             conf->wpa_key_mgmt = WPA_KEY_MGMT_OWE;
+            wifi_hal_dbg_print("%s:%d: Sneha security_mode_enhanced_open - wpa_key_mgmt:0x%x\n", __func__, __LINE__, conf->wpa_key_mgmt);
             break;
         case wifi_security_mode_wpa_personal:
         case wifi_security_mode_wpa2_personal:
         case wifi_security_mode_wpa_wpa2_personal:
             conf->wpa_key_mgmt = WPA_KEY_MGMT_PSK;
+            wifi_hal_dbg_print("%s:%d: Sneha security_mode_wpa_personal/wpa2_personal - wpa_key_mgmt:0x%x mode:0x%x\n", __func__, __LINE__, conf->wpa_key_mgmt, sec->mode);
             break;    
 
         case wifi_security_mode_wpa_enterprise:
@@ -531,6 +537,7 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
         case wifi_security_mode_wpa_wpa2_enterprise:
             conf->wpa_key_mgmt = WPA_KEY_MGMT_IEEE8021X;
             conf->ieee802_1x = 1;
+            wifi_hal_dbg_print("%s:%d: Sneha security_mode_wpa2_enterprise/wpa_enterprise - wpa_key_mgmt:0x%x ieee802_1x:%d mode:0x%x\n", __func__, __LINE__, conf->wpa_key_mgmt, conf->ieee802_1x, sec->mode);
             break;
         case wifi_security_mode_wpa3_personal:
             conf->wpa_key_mgmt = WPA_KEY_MGMT_SAE;
@@ -562,6 +569,8 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
             conf->wpa_key_mgmt = WPA_KEY_MGMT_IEEE8021X_SHA256;
             conf->group_mgmt_cipher= WPA_CIPHER_AES_128_CMAC;
             conf->ieee802_1x = 1;
+            wifi_hal_dbg_print("%s:%d: Sneha security_mode_wpa3_enterprise - wpa_key_mgmt:0x%x group_mgmt_cipher:0x%x ieee802_1x:%d\n",
+                __func__, __LINE__, conf->wpa_key_mgmt, conf->group_mgmt_cipher, conf->ieee802_1x);
 
             break;
         case wifi_security_mode_wpa3_transition:
@@ -678,6 +687,8 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
 
     wifi_hal_dbg_print("%s:%d: security:%d mfp:%d wpa_key_mgmt:%d 11w:%d beacon_prot: %d\n",
                        __func__, __LINE__, sec->mode, sec->mfp, conf->wpa_key_mgmt, conf->ieee80211w, conf->beacon_prot);
+    wifi_hal_dbg_print("%s:%d: Sneha AFTER MFP config - security_mode:0x%x mfp:%d wpa_key_mgmt:0x%x ieee80211w:%d ieee802_1x:%d interface:%s\n",
+                       __func__, __LINE__, sec->mode, sec->mfp, conf->wpa_key_mgmt, conf->ieee80211w, conf->ieee802_1x, conf->iface);
   
     if (conf->wpa_key_mgmt != -1) {
         const int is_ieee802_1x = !!((WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_IEEE8021X_SHA256) & conf->wpa_key_mgmt);
@@ -760,6 +771,8 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
     conf->wpa_group_rekey_set = 1;
 
     wifi_hal_dbg_print("%s:%d: wpa_gmk_rekey:%d wpa_group_rekey:%d wpa:%d \n", __func__, __LINE__, conf->wpa_gmk_rekey, conf->wpa_group_rekey, conf->wpa);
+    wifi_hal_dbg_print("%s:%d: Sneha FINAL security config - wpa:%d wpa_key_mgmt:0x%x wpa_pairwise:0x%x ieee802_1x:%d encr:%d mode:0x%x interface:%s\n",
+        __func__, __LINE__, conf->wpa, conf->wpa_key_mgmt, conf->wpa_pairwise, conf->ieee802_1x, sec->encr, sec->mode, conf->iface);
 
     conf->wpa_strict_rekey = sec->strict_rekey;
 
@@ -1210,8 +1223,12 @@ int update_hostap_bss(wifi_interface_info_t *interface)
 
     if (update_security_config(&vap->u.bss_info.security, conf) == -1) {
         wifi_hal_error_print("%s:%d:update_security_config failed \n", __func__, __LINE__);
+        wifi_hal_dbg_print("%s:%d: Sneha update_security_config FAILED for vap_index:%d ssid:%s mode:0x%x\n",
+            __func__, __LINE__, vap->vap_index, vap->u.bss_info.ssid, vap->u.bss_info.security.mode);
         return RETURN_ERR;
     }
+    wifi_hal_dbg_print("%s:%d: Sneha update_hostap_bss - security config applied vap_index:%d ssid:%s security_mode:0x%x encr:%d mfp:%d\n",
+        __func__, __LINE__, vap->vap_index, vap->u.bss_info.ssid, vap->u.bss_info.security.mode, vap->u.bss_info.security.encr, vap->u.bss_info.security.mfp);
 #if 0
 #ifdef CONFIG_IEEE80211W
     bss->ieee80211w = vap->u.bss_info.mfp;
@@ -2343,6 +2360,11 @@ int update_hostap_interface_params(wifi_interface_info_t *interface)
         return ret;
     }
 
+    wifi_hal_dbg_print("%s:%d: Sneha ENTER update_hostap_interface_params - interface:%s vap_index:%d security_mode:0x%x encr:%d mfp:%d ssid:%s\n",
+        __func__, __LINE__, interface->name, interface->vap_info.vap_index,
+        interface->vap_info.u.bss_info.security.mode, interface->vap_info.u.bss_info.security.encr,
+        interface->vap_info.u.bss_info.security.mfp, interface->vap_info.u.bss_info.ssid);
+
 #ifdef CONFIG_GENERIC_MLO
     if (wifi_hal_is_mld_enabled(interface)) {
         wifi_interface_info_t *first_interface = wifi_hal_get_first_mld_interface(interface);
@@ -3391,12 +3413,19 @@ int start_bss(wifi_interface_info_t *interface)
     //struct hostapd_config *iconf;
     wifi_vap_info_t *vap = &interface->vap_info;
 
+    wifi_hal_dbg_print("%s:%d: Sneha ENTER start_bss - vap_index:%d vap_name:%s ssid:%s security_mode:0x%x encr:%d mfp:%d\n",
+        __func__, __LINE__, vap->vap_index, vap->vap_name, vap->u.bss_info.ssid,
+        vap->u.bss_info.security.mode, vap->u.bss_info.security.encr, vap->u.bss_info.security.mfp);
+
     pthread_mutex_lock(&g_wifi_hal.hapd_lock);
 
     hapd = &interface->u.ap.hapd;
     conf = hapd->conf;
     //iconf = hapd->iconf;
     //iface = hapd->iface;
+
+    wifi_hal_dbg_print("%s:%d: Sneha start_bss hostapd conf - wpa:%d wpa_key_mgmt:0x%x wpa_pairwise:0x%x ieee802_1x:%d ieee80211w:%d interface:%s\n",
+        __func__, __LINE__, conf->wpa, conf->wpa_key_mgmt, conf->wpa_pairwise, conf->ieee802_1x, conf->ieee80211w, conf->iface);
 
     wifi_hal_dbg_print("%s:%d:ssid info ssid len:%zu\n", __func__, __LINE__, conf->ssid.ssid_len);
     if (interface->u.ap.hapd.csa_in_progress == true) {
