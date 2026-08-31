@@ -8388,6 +8388,11 @@ int nl80211_switch_channel(wifi_radio_info_t *radio)
         if (!interface->bss_started) {
             continue;
         }
+		/* Skip VAPs whose firmware has not yet completed beaconing */
+		if (!interface->beacon_set) {
+			wifi_hal_info_print("%s:%d:Sneha Skipping CSA for %s (beacon not set)\n",__func__, __LINE__, interface->name);
+			continue;
+		}
 
 #if defined(CONFIG_GENERIC_MLO)
         if (wait_for_csa_completion(interface) < 0) {
