@@ -2,14 +2,6 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
-
-/* [LTE-3072] Debug instrumentation for the 5 GHz private VAP-down RCA. */
-#define LTE_3072_DEBUG 1
-#ifdef LTE_3072_DEBUG
-#define LTE3072_LOG(fmt, ...) wifi_hal_info_print("[LTE-3072] %s:%d " fmt, __func__, __LINE__, ##__VA_ARGS__)
-#else
-#define LTE3072_LOG(fmt, ...) do { } while (0)
-#endif
  * Copyright 2018 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +20,14 @@
 
 #ifndef WIFI_HAL_PRIV_H
 #define WIFI_HAL_PRIV_H
+
+/* [LTE-3072] Debug instrumentation for the 5 GHz private VAP-down RCA. */
+#define LTE_3072_DEBUG 1
+#ifdef LTE_3072_DEBUG
+#define LTE3072_LOG(fmt, ...) wifi_hal_info_print("[LTE-3072] %s:%d " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#else
+#define LTE3072_LOG(fmt, ...) do { } while (0)
+#endif
 
 #include <stdint.h>
 #include <utils/includes.h>
