@@ -4583,6 +4583,9 @@ int nl80211_interface_enable(const char *ifname, bool enable)
     res = ioctl(fd, SIOCSIFFLAGS, &ifr);
     close(fd);
 
+    /* [LTE-3072] Only flips IFF_UP via SIOCSIFFLAGS. res reflects the ioctl only,
+     * NOT whether the dongle/BSS actually came up and started beaconing. */
+    LTE3072_LOG("iface:%s set IFF_UP=%d ioctl res=%d errno=%d (%s) - no BSS/dongle readiness check\n", ifname, enable, res, errno, strerror(errno));
     wifi_hal_dbg_print("Interface %s %s\n", ifname, enable ? "enabled" : "disabled");
 
     return res;
@@ -4642,6 +4645,9 @@ int nl80211_retry_interface_enable(wifi_interface_info_t *interface, bool enable
         enable ? "enable" : "disable", interface->name);
     return ret;
 #else
+    /* [LTE-3072] On XLE / non-RaspberryPi this retry hook is a NO-OP: no radio or
+     * dongle reset is performed and it always returns success. */
+    LTE3072_LOG("iface:%s retry_interface_enable is a NO-OP on this platform (no reset, returns success)\n", interface->name);
     wifi_hal_dbg_print("%s:%d Interface:%s do nothing, return success.\n", __func__, __LINE__,
         interface->name);
     return 0;
@@ -7789,12 +7795,18 @@ int nl80211_enable_ap(wifi_interface_info_t *interface, bool enable)
     int link_id = wifi_hal_get_mld_link_id(interface);
 #endif // HOSTAPD_VERSION >= 211 && CONFIG_GENERIC_MLO
 
+    LTE3072_LOG("ENTER iface:%s index:%d enable:%d\n", interface->name, interface->index, enable);
     if (enable) {
+        /* [LTE-3072] enable==true only refreshes beacons; it does NOT send
+         * NL80211_CMD_START_AP. So a '-100 Error stopping/starting ap' can only
+         * come from the enable==false STOP_AP path below. */
+        LTE3072_LOG("iface:%s enable=true -> only ieee802_11_update_beacons, NO START_AP netlink\n", interface->name);
         pthread_mutex_lock(&g_wifi_hal.hapd_lock);
         ieee802_11_update_beacons(interface->u.ap.hapd.iface);
         pthread_mutex_unlock(&g_wifi_hal.hapd_lock);
         return RETURN_OK;
     } else {
+        LTE3072_LOG("iface:%s enable=false -> sending NL80211_CMD_STOP_AP\n", interface->name);
         interface->beacon_set = 0;
         msg = nl80211_drv_cmd_msg(g_wifi_hal.nl80211_id, NULL, 0, NL80211_CMD_STOP_AP);
     }
@@ -7820,10 +7832,12 @@ int nl80211_enable_ap(wifi_interface_info_t *interface, bool enable)
     wifi_hal_dbg_print("%s:%d: %s ap on interface: %d\n", __func__, __LINE__,
         enable ? "Starting" : "Stopping", interface->index);
     if ((ret = nl80211_send_and_recv(msg, ap_enable_handler, &g_wifi_hal, NULL, NULL))) {
+        LTE3072_LOG("iface:%s STOP_AP FAILED ret=%d (%s) [STOP path, not START]\n", interface->name, ret, strerror(-ret));
         wifi_hal_error_print("%s:%d: Error stopping/starting ap: %d (%s) \n", __func__, __LINE__, ret, strerror(-ret));
         return RETURN_ERR;
     }
 
+    LTE3072_LOG("iface:%s STOP_AP ok\n", interface->name);
     return RETURN_OK;
 }
 

@@ -21,6 +21,15 @@
 #ifndef WIFI_HAL_PRIV_H
 #define WIFI_HAL_PRIV_H
 
+/* [LTE-3072] Debug instrumentation to confirm the 5GHz private VAP-down RCA.
+ * Remove the define below (or drop the -DLTE_3072_DEBUG build flag) to disable. */
+#define LTE_3072_DEBUG 1
+#ifdef LTE_3072_DEBUG
+#define LTE3072_LOG(fmt, ...) wifi_hal_info_print("[LTE-3072] %s:%d " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#else
+#define LTE3072_LOG(fmt, ...) do { } while (0)
+#endif
+
 #include <stdint.h>
 #include <utils/includes.h>
 #include <linux/version.h>

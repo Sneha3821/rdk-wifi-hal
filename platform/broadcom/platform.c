@@ -611,6 +611,7 @@ int platform_radio_up(int radio_index, bool up)
             wifi_hal_info_print("### %s: cmd=[%s] rc=%d ###\n", __func__, cmd, rc);
         }
     }
+    LTE3072_LOG("radio_index=%d up=%d final rc=%d\n", radio_index, up, rc);
     return rc;
 }
 
@@ -653,6 +654,7 @@ int platform_bss_up(int vap_index, bool up)
             snprintf(cmd, sizeof(cmd), "%s bssup=%d up=%d NOP", osifname, isbssup, up);
     }
     wifi_hal_info_print("### %s: cmd=[%s] rc=%d ###\n", __func__, cmd, rc);
+    LTE3072_LOG("vap_index=%d up=%d final rc=%d\n", vap_index, up, rc);
     return rc;
 }
 
@@ -4999,6 +5001,8 @@ int nl80211_drv_mlo_msg(struct nl_msg *msg, struct nl_msg **msg_mlo, void *priv,
     (void)msg;
 
     *msg_mlo = NULL;
+
+    LTE3072_LOG("ENTER (MLO apply path invoked from start_bss) priv=%p\n", priv);
 
 /*
  *  Currently only 'XB10_PORT' support the nl mlo vendor commands.

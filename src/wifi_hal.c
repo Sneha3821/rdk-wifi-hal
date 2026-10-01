@@ -881,6 +881,7 @@ INT wifi_hal_setRadioOperatingParameters(wifi_radio_index_t index, wifi_radio_op
 #endif // defined(BANANA_PI_PORT) && defined(CONFIG_GENERIC_MLO)
                     interface->beacon_set = 0;
                     start_bss(interface);
+                    LTE3072_LOG("vap:%s:%d forcing bss_started=true (start_bss result not acted upon)\n", interface->vap_info.vap_name, interface->vap_info.vap_index);
                     interface->bss_started = true;
                 }
 
@@ -1594,6 +1595,7 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
                             __LINE__, interface_name);
                         interface->beacon_set = 0;
                         ret = start_bss(interface);
+                        LTE3072_LOG("vap:%s:%d createVAP(reconfigured) start_bss ret=%d -> forcing bss_started=true\n", interface->vap_info.vap_name, interface->vap_info.vap_index, ret);
                         interface->bss_started = true;
                     }
                 } else {
@@ -1613,13 +1615,18 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
                         __LINE__, interface_name);
                     interface->beacon_set = 0;
                     ret = start_bss(interface);
+                    LTE3072_LOG("vap:%s:%d createVAP start_bss ret=%d -> forcing bss_started=true\n", interface->vap_info.vap_name, interface->vap_info.vap_index, ret);
                     interface->bss_started = true;
                 }
             }
             if (radio->configured && radio->oper_param.enable) {
                 wifi_hal_info_print("%s:%d: interface:%s set %s\n", __func__, __LINE__,
                     interface_name, vap->u.bss_info.enabled ? "up" : "down");
-                nl80211_interface_enable(interface_name, vap->u.bss_info.enabled);
+                {
+                    int lte3072_en = nl80211_interface_enable(interface_name, vap->u.bss_info.enabled);
+                    LTE3072_LOG("post start_bss nl80211_interface_enable(%s, enabled=%d) ret=%d (return normally unchecked)\n", interface_name, vap->u.bss_info.enabled, lte3072_en);
+                    (void)lte3072_en;
+                }
 #if defined(VNTXER5_PORT) || defined(TARGET_GEMINI7_2)
 #ifdef CONFIG_MLO
                 if(radio->oper_param.variant & WIFI_80211_VARIANT_BE)

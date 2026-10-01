@@ -3379,8 +3379,11 @@ int start_bss(wifi_interface_info_t *interface)
     //my_print_hex_dump(conf->ssid.ssid_len, conf->ssid.ssid);
     ret = hostapd_setup_bss_internal(hapd);
     if (ret != RETURN_OK) {
+        LTE3072_LOG("vap:%s:%d start_bss FAILED ret=%d (hostapd_setup_bss_internal) - caller still forces bss_started=true\n", vap->vap_name, vap->vap_index, ret);
         wifi_hal_error_print("%s:%d: vap:%s:%d create is failed:%d csa status:%d\n", __func__,
             __LINE__, vap->vap_name, vap->vap_index, ret, interface->u.ap.hapd.csa_in_progress);
+    } else {
+        LTE3072_LOG("vap:%s:%d start_bss ok ret=%d started=%d\n", vap->vap_name, vap->vap_index, ret, interface->u.ap.hapd.started);
     }
 
     pthread_mutex_unlock(&g_wifi_hal.hapd_lock);
