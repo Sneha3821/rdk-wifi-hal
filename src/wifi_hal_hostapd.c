@@ -3317,6 +3317,13 @@ int start_bss(wifi_interface_info_t *interface)
 #endif
 #endif
 #endif /* CONFIG_GENERIC_MLO */
+    if (ret != RETURN_OK || ret_mld != RETURN_OK) {
+        LTE3072_LOG("vap:%s:%d start_bss FAILED hostapd_ret=%d mld_ret=%d final_ret=%d; caller paths may still force bss_started=true\n",
+            vap->vap_name, vap->vap_index, ret, ret_mld, ret != RETURN_OK ? ret : ret_mld);
+    } else {
+        LTE3072_LOG("vap:%s:%d start_bss ok hostapd_ret=%d mld_ret=%d started=%d\n",
+            vap->vap_name, vap->vap_index, ret, ret_mld, hapd->started);
+    }
     pthread_mutex_unlock(&g_wifi_hal.hapd_lock);
 
     return ret != RETURN_OK ? ret : ret_mld;
