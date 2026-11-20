@@ -647,6 +647,15 @@ int update_security_config(wifi_vap_security_t *sec, struct hostapd_bss_config *
 #endif
 
 #ifdef CONFIG_IEEE80211W
+    wifi_hal_info_print("%s:%d: WPA3DBG sec mode:%d incoming mfp:%d\n", __func__, __LINE__,
+        sec->mode, sec->mfp);
+    /* Test branch: WPA3-Enterprise needs PMF; Disabled would fall back to WPA2-Enterprise. */
+    if (sec->mode == wifi_security_mode_wpa3_enterprise &&
+        sec->mfp != wifi_mfp_cfg_required) {
+        wifi_hal_error_print("%s:%d: WPA3DBG forcing mfp Required for WPA3-Enterprise (was %d)\n",
+            __func__, __LINE__, sec->mfp);
+        sec->mfp = wifi_mfp_cfg_required;
+    }
     conf->ieee80211w = (enum mfp_options)sec->mfp;
     conf->beacon_prot = 0;
     switch (conf->ieee80211w) {

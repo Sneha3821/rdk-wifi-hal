@@ -2640,6 +2640,16 @@ int platform_create_vap(wifi_radio_index_t r_index, wifi_vap_info_map_t *map)
             }
 
             prepare_param_name(param_name, interface_name, "_mfp");
+            /* Test branch: nvram encodes WPA3-Enterprise as akm=wpa2 + mfp=2, so Disabled reads back as WPA2-Enterprise. */
+            if (map->vap_array[index].u.bss_info.security.mode == wifi_security_mode_wpa3_enterprise &&
+                map->vap_array[index].u.bss_info.security.mfp != wifi_mfp_cfg_required) {
+                wifi_hal_error_print("%s:%d: WPA3DBG %s forcing nvram mfp Required (was %d)\n",
+                    __func__, __LINE__, interface_name, map->vap_array[index].u.bss_info.security.mfp);
+                map->vap_array[index].u.bss_info.security.mfp = wifi_mfp_cfg_required;
+            }
+            wifi_hal_info_print("%s:%d: WPA3DBG %s nvram akm mode:%d mfp:%d\n", __func__, __LINE__,
+                interface_name, map->vap_array[index].u.bss_info.security.mode,
+                map->vap_array[index].u.bss_info.security.mfp);
             set_decimal_nvram_param(param_name, map->vap_array[index].u.bss_info.security.mfp);
 
             prepare_param_name(param_name, interface_name, "_ap_isolate");
