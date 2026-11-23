@@ -99,9 +99,7 @@ INT wifi_hal_getSSIDTrafficStats2(  INT ssidIndex,
 {
     wifi_hal_dbg_print("%s:%d: Enter.\n", __func__, __LINE__);
 
-    wifi_getSSIDTrafficStats2(ssidIndex, output_struct);
-
-    return 0;
+    return wifi_getSSIDTrafficStats2(ssidIndex, output_struct);
 }
 
 //--------------------------------------------------------------------------------------------------

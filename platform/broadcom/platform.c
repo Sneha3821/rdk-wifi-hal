@@ -4370,6 +4370,195 @@ INT wifi_getRadioTrafficStats2(INT radioIndex, wifi_radioTrafficStats2_t *radioT
     return RETURN_OK;
 }
 
+#ifdef RDK_VENDOR_NL80211_SUBCMD_GET_VAP_INFO
+typedef struct {
+    wifi_ssidTrafficStats2_t *stats;
+    bool valid;
+} vap_traffic_ctx_t;
+
+static const struct {
+    int attr;
+    size_t offset;
+} vap_traffic_map[] = {
+    { RDK_VENDOR_ATTR_VAP_INFO_BYTES_SENT, offsetof(wifi_ssidTrafficStats2_t, ssid_BytesSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_BYTES_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_BytesReceived) },
+    { RDK_VENDOR_ATTR_VAP_INFO_PACKETS_SENT, offsetof(wifi_ssidTrafficStats2_t, ssid_PacketsSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_PACKETS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_PacketsReceived) },
+    { RDK_VENDOR_ATTR_VAP_INFO_RETRANS_COUNT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_RetransCount) },
+    { RDK_VENDOR_ATTR_VAP_INFO_FAILED_RETRANS_COUNT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_FailedRetransCount) },
+    { RDK_VENDOR_ATTR_VAP_INFO_RETRY_COUNT, offsetof(wifi_ssidTrafficStats2_t, ssid_RetryCount) },
+    { RDK_VENDOR_ATTR_VAP_INFO_MULTIPLE_RETRY_COUNT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_MultipleRetryCount) },
+    { RDK_VENDOR_ATTR_VAP_INFO_ACK_FAILURE_COUNT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_ACKFailureCount) },
+    { RDK_VENDOR_ATTR_VAP_INFO_AGGREGATED_PACKET_COUNT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_AggregatedPacketCount) },
+    { RDK_VENDOR_ATTR_VAP_INFO_ERRORS_SENT, offsetof(wifi_ssidTrafficStats2_t, ssid_ErrorsSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_ERRORS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_ErrorsReceived) },
+    { RDK_VENDOR_ATTR_VAP_INFO_UNICAST_PACKETS_SENT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_UnicastPacketsSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_UNICAST_PACKETS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_UnicastPacketsReceived) },
+    { RDK_VENDOR_ATTR_VAP_INFO_DISCARD_PACKETS_SENT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_DiscardedPacketsSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_DISCARD_PACKETS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_DiscardedPacketsReceived) },
+    { RDK_VENDOR_ATTR_VAP_INFO_MULTICAST_PACKETS_SENT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_MulticastPacketsSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_MULTICAST_PACKETS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_MulticastPacketsReceived) },
+    { RDK_VENDOR_ATTR_VAP_INFO_BROADCAST_PACKETS_SENT,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_BroadcastPacketsSent) },
+    { RDK_VENDOR_ATTR_VAP_INFO_BROADCAST_PACKETS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_BroadcastPacketsRecevied) },
+    { RDK_VENDOR_ATTR_VAP_INFO_UNKNOWN_PROTO_PACKETS_RECEIVED,
+        offsetof(wifi_ssidTrafficStats2_t, ssid_UnknownPacketsReceived) },
+};
+
+static int get_vap_traffic_handler(struct nl_msg *msg, void *arg)
+{
+    size_t i;
+    struct nlattr *tb[NL80211_ATTR_MAX + 1];
+    struct nlattr *tb_vendor[RDK_VENDOR_ATTR_MAX + 1];
+    struct nlattr *tb_vap_info[RDK_VENDOR_ATTR_VAP_INFO_MAX + 1];
+    struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+    static struct nla_policy vendor_policy[RDK_VENDOR_ATTR_MAX + 1] = {
+        [RDK_VENDOR_ATTR_VAP_INFO] = { .type = NLA_NESTED },
+    };
+    static struct nla_policy vap_info_policy[RDK_VENDOR_ATTR_VAP_INFO_MAX + 1] = {
+        [RDK_VENDOR_ATTR_VAP_INFO_BYTES_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_BYTES_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_PACKETS_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_PACKETS_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_RETRANS_COUNT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_FAILED_RETRANS_COUNT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_RETRY_COUNT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_MULTIPLE_RETRY_COUNT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_ACK_FAILURE_COUNT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_AGGREGATED_PACKET_COUNT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_ERRORS_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_ERRORS_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_UNICAST_PACKETS_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_UNICAST_PACKETS_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_DISCARD_PACKETS_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_DISCARD_PACKETS_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_MULTICAST_PACKETS_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_MULTICAST_PACKETS_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_BROADCAST_PACKETS_SENT] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_BROADCAST_PACKETS_RECEIVED] = { .type = NLA_U64 },
+        [RDK_VENDOR_ATTR_VAP_INFO_UNKNOWN_PROTO_PACKETS_RECEIVED] = { .type = NLA_U64 },
+    };
+    vap_traffic_ctx_t *ctx = arg;
+
+    if (nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), NULL) <
+        0) {
+        wifi_hal_stats_error_print("%s:%d Failed to parse vendor data\n", __func__, __LINE__);
+        return NL_SKIP;
+    }
+
+    if (tb[NL80211_ATTR_VENDOR_DATA] == NULL) {
+        wifi_hal_stats_error_print("%s:%d Vendor data is missing\n", __func__, __LINE__);
+        return NL_SKIP;
+    }
+
+    if (nla_parse(tb_vendor, RDK_VENDOR_ATTR_MAX, nla_data(tb[NL80211_ATTR_VENDOR_DATA]),
+            nla_len(tb[NL80211_ATTR_VENDOR_DATA]), vendor_policy) < 0 ||
+        tb_vendor[RDK_VENDOR_ATTR_VAP_INFO] == NULL) {
+        wifi_hal_stats_error_print("%s:%d Failed to parse vendor attribute\n", __func__, __LINE__);
+        return NL_SKIP;
+    }
+
+    if (nla_parse_nested(tb_vap_info, RDK_VENDOR_ATTR_VAP_INFO_MAX,
+            tb_vendor[RDK_VENDOR_ATTR_VAP_INFO], vap_info_policy)) {
+        wifi_hal_stats_error_print("%s:%d Failed to parse VAP info attribute\n", __func__,
+            __LINE__);
+        return NL_SKIP;
+    }
+
+    /* A reply without every counter is rejected so that a missing counter is never shown as 0 */
+    for (i = 0; i < ARRAY_SZ(vap_traffic_map); i++) {
+        if (tb_vap_info[vap_traffic_map[i].attr] == NULL) {
+            wifi_hal_stats_error_print("%s:%d VAP info attribute %d is missing\n", __func__,
+                __LINE__, vap_traffic_map[i].attr);
+            return NL_SKIP;
+        }
+    }
+
+    for (i = 0; i < ARRAY_SZ(vap_traffic_map); i++) {
+        *(ULONG *)((char *)ctx->stats + vap_traffic_map[i].offset) =
+            (ULONG)nla_get_u64(tb_vap_info[vap_traffic_map[i].attr]);
+    }
+    ctx->valid = true;
+
+    return NL_SKIP;
+}
+
+static int get_vap_traffic_stats(wifi_interface_info_t *interface,
+    wifi_ssidTrafficStats2_t *vapTrafficStats)
+{
+    struct nl_msg *msg;
+    vap_traffic_ctx_t ctx = { .stats = vapTrafficStats, .valid = false };
+
+    msg = nl80211_drv_vendor_cmd_msg(g_wifi_hal.nl80211_id, interface, 0, OUI_COMCAST,
+        RDK_VENDOR_NL80211_SUBCMD_GET_VAP_INFO);
+    if (msg == NULL) {
+        wifi_hal_stats_error_print("%s:%d Failed to create NL command\n", __func__, __LINE__);
+        return RETURN_ERR;
+    }
+
+    if (nl80211_send_and_recv(msg, get_vap_traffic_handler, &ctx, NULL, NULL) || !ctx.valid) {
+        wifi_hal_stats_error_print("%s:%d Failed to get VAP traffic stats\n", __func__, __LINE__);
+        return RETURN_ERR;
+    }
+
+    return RETURN_OK;
+}
+
+INT wifi_getSSIDTrafficStats2(INT ssidIndex, wifi_ssidTrafficStats2_t *output_struct)
+{
+    wifi_interface_info_t *interface;
+
+    wifi_hal_stats_dbg_print("%s:%d: Get SSID traffic stats for index: %d\n", __func__, __LINE__,
+        ssidIndex);
+
+    if (output_struct == NULL) {
+        wifi_hal_stats_error_print("%s:%d: NULL output for index: %d\n", __func__, __LINE__,
+            ssidIndex);
+        return RETURN_ERR;
+    }
+    memset(output_struct, 0, sizeof(*output_struct));
+
+    interface = get_interface_by_vap_index(ssidIndex);
+    if (interface == NULL) {
+        wifi_hal_stats_error_print("%s:%d: Failed to get interface for vap index: %d\n", __func__,
+            __LINE__, ssidIndex);
+        return RETURN_ERR;
+    }
+
+    if (get_vap_traffic_stats(interface, output_struct)) {
+        wifi_hal_stats_error_print("%s:%d: Failed to get SSID traffic stats for vap index: %d\n",
+            __func__, __LINE__, ssidIndex);
+        memset(output_struct, 0, sizeof(*output_struct));
+        return RETURN_ERR;
+    }
+
+    return RETURN_OK;
+}
+#else
+/* The driver header has no GET_VAP_INFO, so SSID traffic stats cannot be read. */
+INT wifi_getSSIDTrafficStats2(INT ssidIndex, wifi_ssidTrafficStats2_t *output_struct)
+{
+    wifi_hal_stats_error_print("%s:%d: SSID traffic stats are not supported by the driver\n",
+        __func__, __LINE__);
+    return RETURN_ERR;
+}
+#endif /* RDK_VENDOR_NL80211_SUBCMD_GET_VAP_INFO */
+
 static int set_ap_pwr(wifi_interface_info_t *interface, INT *power)
 {
     struct nlattr *nlattr;

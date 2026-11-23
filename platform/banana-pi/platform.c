@@ -905,6 +905,12 @@ exit:
     return ret;
 }
 
+INT wifi_getSSIDTrafficStats2(INT ssidIndex, wifi_ssidTrafficStats2_t *output_struct)
+{
+    wifi_hal_stats_error_print("%s:%d: SSID traffic stats are not supported\n", __func__, __LINE__);
+    return RETURN_ERR;
+}
+
 //--------------------------------------------------------------------------------------------------
 INT wifi_getApEnable(INT apIndex, BOOL *output_bool)
 {
