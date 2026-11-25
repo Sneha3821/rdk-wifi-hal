@@ -177,6 +177,9 @@ static char const *bss_nvifname[] = {
 
 static int get_ccspwifiagent_interface_name_from_vap_index(unsigned int vap_index, char *interface_name)
 {
+#if defined(TCXB7_PORT) || defined(TCXB8_PORT) || defined(XB10_PORT) || defined(RDKB_ONE_WIFI_PROD)
+    return get_interface_name_from_vap_index(vap_index, interface_name);
+#else
     // OneWifi interafce mapping with vap_index
     unsigned char l_index = 0;
     unsigned char total_num_of_vaps = 0;
@@ -202,6 +205,7 @@ static int get_ccspwifiagent_interface_name_from_vap_index(unsigned int vap_inde
         return RETURN_ERR;
     }
     return RETURN_OK;
+#endif
 }
 #endif
 
