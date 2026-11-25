@@ -159,7 +159,13 @@ static void nvram_update_wl_mlo_config(unsigned int radio_index, int mld_link_id
     int *nvram_changed);
 #endif
 
-#ifndef NEWPLATFORM_PORT
+
+static int get_ccspwifiagent_interface_name_from_vap_index(unsigned int vap_index, char *interface_name)
+{
+#if defined(TCXB7_PORT) || defined(TCXB8_PORT) || defined(XB10_PORT) || defined(RDKB_ONE_WIFI_PROD)
+    return get_interface_name_from_vap_index(vap_index, interface_name);
+#else
+	#ifndef NEWPLATFORM_PORT
 static char const *bss_nvifname[] = {
     "wl0",      "wl1",
     "wl0.1",    "wl1.1",
@@ -173,13 +179,7 @@ static char const *bss_nvifname[] = {
     "wl2.2",    "wl2.3",
     "wl2.4",    "wl2.5",
     "wl2.6",    "wl2.7",
-};  /* Indexed by apIndex */
-
-static int get_ccspwifiagent_interface_name_from_vap_index(unsigned int vap_index, char *interface_name)
-{
-#if defined(TCXB7_PORT) || defined(TCXB8_PORT) || defined(XB10_PORT) || defined(RDKB_ONE_WIFI_PROD)
-    return get_interface_name_from_vap_index(vap_index, interface_name);
-#else
+}; 
     // OneWifi interafce mapping with vap_index
     unsigned char l_index = 0;
     unsigned char total_num_of_vaps = 0;
@@ -205,7 +205,8 @@ static int get_ccspwifiagent_interface_name_from_vap_index(unsigned int vap_inde
         return RETURN_ERR;
     }
     return RETURN_OK;
-#endif
+#endif  // NEWPLATFORM_PORT
+#endif  // TCXB7_PORT / TCXB8_PORT / XB10_PORT / RDKB_ONE_WIFI_PROD
 }
 #endif
 
